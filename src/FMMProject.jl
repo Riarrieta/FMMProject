@@ -1,5 +1,9 @@
 module FMMProject
 
-greet() = print("Hello World!")
+using LinearAlgebra
+using StaticArrays
+
+include("utils.jl")
+
 
 end # module
