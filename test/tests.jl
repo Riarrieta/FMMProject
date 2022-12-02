@@ -1,4 +1,5 @@
 using Test
+using Random
 using FMMProject
 import FMMProject: Point2D,
                    Point3D,
@@ -9,8 +10,11 @@ import FMMProject: Point2D,
                    corners,
                    dist,
                    compute_bounding_box,
-                   isinbox
+                   isinbox,
+                   split_points,
+                   split_box
 
+Random.seed!(1)
 @testset "Box" begin
     for N in [2,3]
         ce = Point{N}(ntuple(i->0.5,N))
@@ -29,10 +33,17 @@ import FMMProject: Point2D,
         L = 23
         points = rand(Point{N},M) .* L
         box = compute_bounding_box(points)
-        @test L/2 ≤  box.a ≤ L
+        @test L/2 <  box.a < L
         for p in points
             @test isinbox(p,box)
         end
-    end
 
+        children_points = split_points(points,box)
+        children_boxes = split_box(box)
+        for (plist,b) in zip(children_points,children_boxes)
+            for p in plist
+                @test isinbox(p,b)
+            end
+        end
+    end
 end

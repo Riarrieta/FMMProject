@@ -43,4 +43,37 @@ function compute_bounding_box(points::Vector{Point{N}}) where N
     return Box(ce,a)
 end
 
+# Split a vector of points in 2^N vectors of points
+# with respect to a central point 'ce'
+function split_points(points::Vector{Point{N}},ce::Point{N}) where N
+    vecpoints = [Point{N}[] for _ in 1:2^N]
+    matpoints = reshape(vecpoints,ntuple(_->2,N))
+    for p in points
+        index = ntuple(N) do i
+            1 + (p[i] > ce[i])
+        end
+        push!(matpoints[index...],p)
+    end
+    return vecpoints
+end
+split_points(points::Vector{Point{N}},b::Box{N}) where N = split_points(points,center(b))
+
+# Split a Box in 2^N equal Box'es
+# should be consistent with the function 'split_points'
+function split_box(b::Box{N}) where N
+    ce = center(b)
+    a = halfside(b)
+    children_a  = a/2
+    children_ce = [ce for _ in 1:2^N]
+    mat_children_ce = reshape(children_ce,ntuple(_->2,N))
+    for index in CartesianIndices(mat_children_ce)
+        offset = ntuple(N) do i
+            children_a*(-1)^isodd(index[i])
+        end
+        mat_children_ce[index] += Point{N}(offset)
+    end
+    children_boxes = [Box(c,children_a) for c in children_ce]
+    return children_boxes
+end
+
 
