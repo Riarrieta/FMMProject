@@ -1,17 +1,21 @@
 
-
-struct FMMStruct{N,K<:AbstractKernel}
-    tree
-    levels
-
-end
-
 struct TreeNode{N}
     parent::Union{Nothing,TreeNode{N}}
     children::Vector{TreeNode{N}}   # list of children
     ilist::Vector{TreeNode{N}}      # interaction list
-    points::Vector{Point{N}}
     box::Box{N}
+    qhat::Vector{ComplexF64}        # outcoming expansion
+    vhat::Vector{ComplexF64}        # incoming expansion
+    # Translation operators
+    Tofo::Vector{LowerTriangular{ComplexF64,Matrix{ComplexF64}}}  # outgoing-from-outgoing
+    Tifo::Vector{Matrix{ComplexF64}}  # incoming-from-outgoing
+    Tifi::UpperTriangular{ComplexF64,Matrix{ComplexF64}}  # incoming-from-incoming
+    # Leaves-only translation operators
+    Tofs::Matrix{ComplexF64}
+    Ttfi::Matrix{ComplexF64}
+    # Leaves-only data
+    points::Vector{Point{N}}           # points xᵢ in R^N
+    points_indices::Vector{Integer}    # global indices of points xᵢ 
 end
 
 parent(t::TreeNode) = t.parent
@@ -19,6 +23,7 @@ children(t::TreeNode) = t.children
 interaction_list(t::TreeNode) = t.ilist
 points(t::TreeNode) = t.points
 box(t::TreeNode) = t.box
+npoints(t::TreeNode) = length(points(t))
 
 corners(t::TreeNode) = corners(t.box)
 center(t::TreeNode) = center(t.box)

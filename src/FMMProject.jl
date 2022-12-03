@@ -5,6 +5,7 @@ using StaticArrays
 
 include("utils.jl")
 include("tree.jl")
+include("fmm.jl")
 
 
 end # module

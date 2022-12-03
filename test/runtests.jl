@@ -1,4 +1,4 @@
 using FMMProject
 using SafeTestsets
 
-@safetestset "Tests" begin include("tests.jl") end
+@safetestset "Utils" begin include("utils.jl") end

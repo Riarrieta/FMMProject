@@ -1,12 +1,17 @@
 
-abstract type AbstractKernel end
-abstract type Laplace <: AbstractKernel end
+abstract type AbstractKernel{N} end
+abstract type Laplace{N} <: AbstractKernel{N} end
+abstract type Laplace2D <: Laplace{2} end
+abstract type Laplace3D <: Laplace{3} end
 
 const Point{N} = SVector{N,Float64}
 const Point2D  = Point{2}
 const Point3D  = Point{3}
 
+from_point2d_to_complex(p::Point2D) = ComplexF64(p...)
 from_point2d_to_complex(l::Vector{Point2D}) = reinterpret(ComplexF64,l)
+
+minus1exp(p) = (-1)^isodd(p)
 
 # Box of dimension N
 struct Box{N}

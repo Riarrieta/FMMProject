@@ -11,3 +11,5 @@ box = compute_bounding_box(points)
 scatter([p[1] for p in points],[p[2] for p in points])
 scatter!([box.lc[1]],[box.lc[2]])
 scatter!([box.uc[1]],[box.uc[2]])
+
+##
