@@ -19,8 +19,9 @@ function initialize_tree_structures(::Type{Laplace2D}, npoints, P, M)
     return children,ilist,qhat,vhat,Tofo,Tifo,Tifi,Tofs,Ttfi
 end
 
-function compute_Tofo_ops(::FMMLaplace2D{P},t::TreeNode{2}) where P
+function compute_Tofo_ops(::FMMLaplace2D,t::TreeNode{2})
     isleaf(t) && return
+    P = interaction_rank(t)
     childlist = children(t)
     empty!(t.Tofo)
     append!(t.Tofo, LowerTriangular(zeros(ComplexF64,P,P)) for _ in childlist)
@@ -38,7 +39,8 @@ function compute_Tofo_ops(::FMMLaplace2D{P},t::TreeNode{2}) where P
     end
 end
 
-function compute_Tifo_ops(::FMMLaplace2D{P},t::TreeNode{2}) where P
+function compute_Tifo_ops(::FMMLaplace2D,t::TreeNode{2})
+    P = interaction_rank(t)
     ilist = interaction_list(τ)
     cτ = center(τ) |> from_point2d_to_complex
     empty!(τ.Tifo)
@@ -64,8 +66,9 @@ function compute_Tifo_ops(::FMMLaplace2D{P},t::TreeNode{2}) where P
     end
 end
 
-function compute_Tifi_ops(::FMMLaplace2D{P},t::TreeNode{2}) where P
+function compute_Tifi_ops(::FMMLaplace2D,t::TreeNode{2})
     isroot(σ) && return
+    P = interaction_rank(t)
     τ = parent(σ)
     cσ = center(σ) |> from_point2d_to_complex
     cτ = center(τ) |> from_point2d_to_complex
@@ -80,7 +83,8 @@ function compute_Tifi_ops(::FMMLaplace2D{P},t::TreeNode{2}) where P
     end
 end
 
-function compute_Tofs_ops(::FMMLaplace2D{P},t::TreeNode{2}) where P
+function compute_Tofs_ops(::FMMLaplace2D,t::TreeNode{2})
+    P = interaction_rank(t)
     cσ = center(σ) |> from_point2d_to_complex
     xlist = points(σ)
     Nσ = npoints(σ)
@@ -96,7 +100,8 @@ function compute_Tofs_ops(::FMMLaplace2D{P},t::TreeNode{2}) where P
     end
 end
 
-function compute_Ttfi_ops(::FMMLaplace2D{P},t::TreeNode{2}) where P
+function compute_Ttfi_ops(::FMMLaplace2D,t::TreeNode{2})
+    P = interaction_rank(t)
     cτ = center(τ) |> from_point2d_to_complex
     xlist = points(τ) 
     Nτ = npoints(τ)

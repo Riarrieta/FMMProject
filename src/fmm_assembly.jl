@@ -10,13 +10,13 @@ function assemble_root_tree_node(points,K,P,M)
     return tree                    
 end
 
-
-###### Laplace 2D ################
-function FMMLaplace(points::Vector{Point2D},P,M)
-    K = Laplace2D   # kernel
+function FMM(K,points::Vector{Point{N}},P,M) where N
     tree = assemble_root_tree_node(points,K,P,M)
     levels = [[tree]]
     result = zeros(ComplexF64,length(points))
     fmm = FMM{2,P,K}(tree,levels,points,result,M)
     return fmm
 end
+
+###### Laplace 2D ################
+FMMLaplace(points::Vector{Point2D},P,M) = FMM(Laplace2D,points,P,M)

@@ -1,19 +1,21 @@
 
-struct FMM{N,P,K<:AbstractKernel{N}}
+struct FMM{N,K<:AbstractKernel{N}}
     tree::TreeNode{N}
     levels::Vector{Vector{TreeNode{N}}}
     points::Vector{Point{N}}
     result::Vector{ComplexF64}
     maxpointsperleaf::Integer
+    interactionrank::Integer
 end
 
-const FMMLaplace{N,P} = FMM{N,P,<:Laplace{N}} where {N,P}
-const FMMLaplace2D{P} = FMM{2,P,<:Laplace2D} where P
-const FMMLaplace3D{P} = FMM{3,P,<:Laplace3D} where P
+const FMMLaplace{N} = FMM{N,<:Laplace{N}} where {N}
+const FMMLaplace2D = FMM{2,<:Laplace2D}
+const FMMLaplace3D = FMM{3,<:Laplace3D}
 
-kernel(::FMM{N,P,K}) where {N,P,K} = K
+kernel(::FMM{N,K}) where {N,K} = K
 levels(f::FMM) = f.levels
 nlevels(f::FMM) = length(levels(f))
 points(f::FMM) = f.points 
 maxpointsperleaf(f::FMM) = f.maxpointsperleaf
+interaction_rank(f::FMM) = f.interaction_rank
 eachlevel(f::FMM) = ((l-1,levels(f)[l]) for l in 1:nlevels(f))
