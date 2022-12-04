@@ -8,7 +8,7 @@ end
 
 function assemble_root_tree_node(points,K,P,M)
     npoints = length(points)
-    parent = Nothing
+    parent = nothing
     box = compute_bounding_box(points)
     children,nlist,ilist,qhat,vhat,
              Tofo,Tifo,Tifi,Tofs,Ttfi = initialize_tree_structures(K,npoints,P;isleaf=false)
@@ -25,7 +25,7 @@ function assemble_child_tree_node(fmm::FMM{N},
                                   points_indices::Vector{Int64},
                                   box::Box{N}) where N
     npoints = length(points)
-    children,ilist,qhat,vhat,Tofo,Tifo,Tifi,Tofs,Ttfi = initialize_tree_structures(fmm, npoints)
+    children,nlist,ilist,qhat,vhat,Tofo,Tifo,Tifi,Tofs,Ttfi = initialize_tree_structures(fmm, npoints)
     tree = TreeNode(parent,children,nlist,ilist,box,qhat,vhat,
                     Tofo,Tifo,Tifi,Tofs,Ttfi,points,points_indices)
     return tree                    
@@ -47,7 +47,7 @@ function split_tree!(fmm::FMM{N},tree::TreeNode{N}) where N
     empty!(xindices)
     # assemble children
     for (cpoints,cindices,cbox) in zip(children_points,children_indices,children_boxes)
-        child = assemble_child_tree_node(fmm,parent,cpoints,cindices,cbox)
+        child = assemble_child_tree_node(fmm,tree,cpoints,cindices,cbox)
         push!(children_list,child)
     end
 end
@@ -64,8 +64,8 @@ function assemble_interaction_and_neigh_lists!(new_level::Vector{TreeNode{N}},
                 push!(interaction_list(node_j),node_i)
             end
             if is_last_level && !is_a_well_separated_from_b(node_i,node_j)
-                push!(nea(node_i),node_j)
-                push!(interaction_list(node_j),node_i)
+                push!(neighbor_list(node_i),node_j)
+                push!(neighbor_list(node_j),node_i)
             end
         end
     end
@@ -96,10 +96,10 @@ function FMM(K,points::Vector{Point{N}},P,L,M=100) where N
     tree = assemble_root_tree_node(points,K,P,M)
     levels = [[tree]]
     result = zeros(ComplexF64,length(points))
-    fmm = FMM{2,P,K}(tree,levels,points,result,P,L,M)
+    fmm = FMM{2,K}(tree,levels,points,result,P,L,M)
     assemble_fmm!(fmm)
     return fmm
 end
 
 ###### Laplace 2D ################
-FMMLaplace(points::Vector{Point2D},P,M) = FMM(Laplace2D,points,P,M)
+FMMLaplace2D(points::Vector{Point2D},P,L,M=100) = FMM(Laplace2D,points,P,L,M)

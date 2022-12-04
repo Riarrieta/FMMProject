@@ -16,13 +16,13 @@ struct TreeNode{N}
     Ttfi::Matrix{ComplexF64}
     # Leaves-only data
     points::Vector{Point{N}}           # points xᵢ in R^N
-    points_indices::Vector{Integer}    # global indices of points xᵢ 
+    points_indices::Vector{Int64}    # global indices of points xᵢ 
 end
 
 const TreeNode2D = TreeNode{2}
 const TreeNode3D = TreeNode{3}
 
-parent(t::TreeNode) = t.parent
+Base.parent(t::TreeNode) = t.parent
 children(t::TreeNode) = t.children
 neighbor_list(t::TreeNode) = t.nlist
 interaction_list(t::TreeNode) = t.ilist
