@@ -52,18 +52,25 @@ end
 
 # Split a vector of points in 2^N vectors of points
 # with respect to a central point 'ce'
-function split_points(points::Vector{Point{N}},ce::Point{N}) where N
+function split_points(points::Vector{Point{N}},
+                      point_indices::Vector{Int64},
+                      ce::Point{N}) where N
     vecpoints = [Point{N}[] for _ in 1:2^N]
     matpoints = reshape(vecpoints,ntuple(_->2,N))
-    for p in points
+    vecindices = [Int64[] for _ in 1:2^N]
+    matindices = reshape(vecindices,ntuple(_->2,N))
+    for (global_index,p) in zip(point_indices,points)
         index = ntuple(N) do i
             1 + (p[i] > ce[i])
         end
         push!(matpoints[index...],p)
+        push!(matindices[index...],global_index)
     end
-    return vecpoints
+    return vecpoints,vecindices
 end
-split_points(points::Vector{Point{N}},b::Box{N}) where N = split_points(points,center(b))
+split_points(points::Vector{Point{N}},
+             point_indices::Vector{Int64},
+             b::Box{N}) where N = split_points(points,point_indices,center(b))
 
 # Split a Box in 2^N equal Box'es
 # should be consistent with the function 'split_points'

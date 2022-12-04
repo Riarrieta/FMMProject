@@ -45,11 +45,13 @@ Random.seed!(1)
                 @test isinbox(p,box)
             end
     
-            children_points = split_points(points,box)
+            points_indices = collect(1:length(points))
+            children_points,children_indices = split_points(points,points_indices,box)
             children_boxes = split_box(box)
-            for (plist,b) in zip(children_points,children_boxes)
-                for p in plist
+            for (plist,ilist,b) in zip(children_points,children_indices,children_boxes)
+                for (i,p) in zip(ilist,plist)
                     @test isinbox(p,b)
+                    @test p == points[i]
                 end
             end
         end

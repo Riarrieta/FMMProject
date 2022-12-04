@@ -10,6 +10,16 @@ function assemble_root_tree_node(points,K,P,M)
     return tree                    
 end
 
+shouldsplit(fmm::FMM{N},tree::TreeNode{N}) where N = npoints(tree)>maxpointsperleaf(fmm)
+
+function split_tree(fmm::FMM{N},tree::TreeNode{N},level=0) where N
+    shouldsplit(fmm,tree) || return
+    xpoints = points(tree)
+    xindices = points_indices(tree)
+    split_points(points::Vector{Point{N}},ce::Point{N})
+    
+end
+
 function FMM(K,points::Vector{Point{N}},P,M) where N
     tree = assemble_root_tree_node(points,K,P,M)
     levels = [[tree]]

@@ -25,6 +25,7 @@ parent(t::TreeNode) = t.parent
 children(t::TreeNode) = t.children
 interaction_list(t::TreeNode) = t.ilist
 points(t::TreeNode) = t.points
+points_indices(t::TreeNode) = t.points_indices
 box(t::TreeNode) = t.box
 npoints(t::TreeNode) = length(points(t))
 
@@ -35,7 +36,6 @@ dist(t1::TreeNode,t2::TreeNode) = dist(t1.box,t2.box)
 
 isroot(t::TreeNode) = isnothing(parent(t))
 isleaf(t::TreeNode) = isempty(children(t))
-shouldsplit(t::TreeNode,M) = npoints(t)>M
 
 is_a_well_separated_from_b(a::TreeNode,b::TreeNode) = dist(a,b)≥3*halfside(b)
 
