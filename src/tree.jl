@@ -18,6 +18,9 @@ struct TreeNode{N}
     points_indices::Vector{Integer}    # global indices of points xᵢ 
 end
 
+const TreeNode2D = TreeNode{2}
+const TreeNode3D = TreeNode{3}
+
 parent(t::TreeNode) = t.parent
 children(t::TreeNode) = t.children
 interaction_list(t::TreeNode) = t.ilist
@@ -32,8 +35,10 @@ dist(t1::TreeNode,t2::TreeNode) = dist(t1.box,t2.box)
 
 isroot(t::TreeNode) = isnothing(parent(t))
 isleaf(t::TreeNode) = isempty(children(t))
+shouldsplit(t::TreeNode,M) = npoints(t)>M
 
 is_a_well_separated_from_b(a::TreeNode,b::TreeNode) = dist(a,b)≥3*halfside(b)
+
 
 
 

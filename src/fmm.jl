@@ -1,100 +1,19 @@
 
 struct FMM{N,P,K<:AbstractKernel{N}}
-    tree
-    levels
-    points
-    result
+    tree::TreeNode{N}
+    levels::Vector{Vector{TreeNode{N}}}
+    points::Vector{Point{N}}
+    result::Vector{ComplexF64}
+    maxpointsperleaf::Integer
 end
 
-### Laplace 2D ################
-function compute_Tofo_ops(::FMM{N,P,<:Laplace2D},t::TreeNode{N}) where {N,P}
-    isleaf(t) && return
-    childlist = children(t)
-    empty!(t.Tofo)
-    append!(t.Tofo, LowerTriangular(zeros(ComplexF64,P,P)) for _ in childlist)
-    cτ = center(t) |> from_point2d_to_complex
-    for (child,mat) in zip(childlist,t.Tofo)
-        cσ = center(child) |> from_point2d_to_complex
-        d = cσ - cτ
-        for j in 1:P
-            s = j-1
-            for i in j:P
-                r = i-1
-                mat[i,j] = binomial(r,s)*d^(r-s)
-            end
-        end
-    end
-end
+const FMMLaplace{N,P} = FMM{N,P,<:Laplace{N}} where {N,P}
+const FMMLaplace2D{P} = FMM{2,P,<:Laplace2D} where P
+const FMMLaplace3D{P} = FMM{3,P,<:Laplace3D} where P
 
-function compute_Tifo_ops(::FMM{N,P,<:Laplace2D},τ::TreeNode{N}) where {N,P}
-    ilist = interaction_list(τ)
-    cτ = center(τ) |> from_point2d_to_complex
-    empty!(τ.Tifo)
-    append!(τ.Tifo, zeros(ComplexF64,P,P) for _ in ilist)
-    for (σ,mat) in zip(ilist,τ.Tifo)
-        cσ = center(σ) |> from_point2d_to_complex
-        d = cσ - cτ
-        for j in 1:P
-            p = j-1
-            for i in 1:P
-                r = i-1
-                if p==0 && r==0
-                    mat[i,j] = log(-d)
-                elseif r==0
-                    mat[i,j] = minus1exp(p)/d^p
-                elseif p==0
-                    mat[i,j] = -1/(r*d^r)
-                else
-                    mat[i,j] = minus1exp(p)*binomial(r+p-1,p-1)/d^(r+p)
-                end
-            end
-        end
-    end
-end
-
-function compute_Tifi_ops(::FMM{N,P,<:Laplace2D},σ::TreeNode{N}) where {N,P}
-    isroot(σ) && return
-    τ = parent(σ)
-    cσ = center(σ) |> from_point2d_to_complex
-    cτ = center(τ) |> from_point2d_to_complex
-    d = cσ - cτ
-    mat = σ.Tifi
-    for j in 1:P
-        p = j-1
-        for i in 1:j
-            r = i-1
-            mat[i,j] = binomial(p,r)*d^(p-r)
-        end
-    end
-end
-
-function compute_Tofs_ops(::FMM{N,P,<:Laplace2D},σ::TreeNode{N}) where {N,P}
-    cσ = center(σ) |> from_point2d_to_complex
-    xlist = points(σ)
-    Nσ = npoints(σ)
-    mat = σ.Tofs
-    for j in 1:Nσ
-        xj = xlist[j]
-        d = xj-cσ
-        mat[1,j] = one(ComplexF64)
-        for i in 2:P
-            p = i-1
-            mat[i,j] = -1/p*d^p
-        end
-    end
-end
-
-function compute_Ttfi_ops(::FMM{N,P,<:Laplace2D},τ::TreeNode{N}) where {N,P}
-    cτ = center(τ) |> from_point2d_to_complex
-    xlist = points(τ) 
-    Nτ = npoints(τ)
-    mat = τ.Ttfi
-    for j in 1:P
-        p = j-1
-        for i in 1:Nτ
-            xi = xlist[i]
-            d = xi-cτ
-            mat[i,j] = d^p
-        end
-    end
-end
+kernel(::FMM{N,P,K}) where {N,P,K} = K
+levels(f::FMM) = f.levels
+nlevels(f::FMM) = length(levels(f))
+points(f::FMM) = f.points 
+maxpointsperleaf(f::FMM) = f.maxpointsperleaf
+eachlevel(f::FMM) = ((l-1,levels(f)[l]) for l in 1:nlevels(f))

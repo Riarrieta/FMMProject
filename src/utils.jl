@@ -4,6 +4,8 @@ abstract type Laplace{N} <: AbstractKernel{N} end
 abstract type Laplace2D <: Laplace{2} end
 abstract type Laplace3D <: Laplace{3} end
 
+dimension(::Type{AbstractKernel{N}}) where N = N
+
 const Point{N} = SVector{N,Float64}
 const Point2D  = Point{2}
 const Point3D  = Point{3}
