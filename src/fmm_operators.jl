@@ -1,7 +1,8 @@
 
 ###### Laplace 2D ################
-function initialize_tree_structures(::Type{Laplace2D}, npoints, P, M)
+function initialize_tree_structures(::Type{Laplace2D}, npoints, P; isleaf)
     children = TreeNode2D[]   # list of children
+    nlist = TreeNode2D[]      # neighbor list
     ilist = TreeNode2D[]      # interaction list
     qhat = zeros(ComplexF64,P)        # outcoming expansion
     vhat = zeros(ComplexF64,P)         # incoming expansion
@@ -9,14 +10,14 @@ function initialize_tree_structures(::Type{Laplace2D}, npoints, P, M)
     Tofo = LowerTriangular{ComplexF64,Matrix{ComplexF64}}[]  # outgoing-from-outgoing
     Tifo = Matrix{ComplexF64}[]  # incoming-from-outgoing
     Tifi = UpperTriangular(zeros(ComplexF64,P,P))  # incoming-from-incoming
-    if npoints ≤ M   # leaf
+    if isleaf
         Tofs = zeros(ComplexF64,P,npoints)
         Ttfi = zeros(ComplexF64,npoints,P)
-    else  # no leaf
+    else
         Tofs = zeros(ComplexF64,0,0)
         Ttfi = zeros(ComplexF64,0,0)
     end
-    return children,ilist,qhat,vhat,Tofo,Tifo,Tifi,Tofs,Ttfi
+    return children,nlist,ilist,qhat,vhat,Tofo,Tifo,Tifi,Tofs,Ttfi
 end
 
 function compute_Tofo_ops(::FMMLaplace2D,t::TreeNode{2})

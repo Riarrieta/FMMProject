@@ -2,6 +2,7 @@
 struct TreeNode{N}
     parent::Union{Nothing,TreeNode{N}}
     children::Vector{TreeNode{N}}   # list of children
+    nlist::Vector{TreeNode{N}}      # neighbor list
     ilist::Vector{TreeNode{N}}      # interaction list
     box::Box{N}
     qhat::Vector{ComplexF64}        # outcoming expansion
@@ -23,6 +24,7 @@ const TreeNode3D = TreeNode{3}
 
 parent(t::TreeNode) = t.parent
 children(t::TreeNode) = t.children
+neighbor_list(t::TreeNode) = t.nlist
 interaction_list(t::TreeNode) = t.ilist
 points(t::TreeNode) = t.points
 points_indices(t::TreeNode) = t.points_indices
@@ -38,7 +40,10 @@ isroot(t::TreeNode) = isnothing(parent(t))
 isleaf(t::TreeNode) = isempty(children(t))
 
 is_a_well_separated_from_b(a::TreeNode,b::TreeNode) = dist(a,b)≥3*halfside(b)
-
+function are_a_and_b_in_interaction_list(a::TreeNode,b::TreeNode)
+    return is_a_well_separated_from_b(a,b) &&
+           !is_a_well_separated_from_b(parent(a),parent(b))
+end
 
 
 
