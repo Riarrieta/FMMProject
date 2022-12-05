@@ -23,5 +23,3 @@ maxpointsperleaf(f::FMM) = f.maxpointsperleaf
 interaction_rank(f::FMM) = f.interactionrank
 eachlevel(f::FMM) = ((l,level(f,l)) for l in 1:nlevels(f))
 leaves(f::FMM) = level(f,maxlevel(f))
-
-is_new_node_a_leaf(fmm::FMM, npoints) = maxlevel(fmm)==nlevels(fmm)+1  # for the moment

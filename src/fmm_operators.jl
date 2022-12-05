@@ -20,9 +20,8 @@ function initialize_tree_structures(::Type{Laplace2D}, npoints, P; isleaf)
     return children,nlist,ilist,qhat,vhat,Tofo,Tifo,Tifi,Tofs,Ttfi
 end
 
-function compute_Tofo_ops(::FMMLaplace2D,t::TreeNode{2})
-    isleaf(t) && return
-    P = interaction_rank(t)
+function compute_Tofo_ops!(fmm::FMMLaplace2D,t::TreeNode{2})
+    P = interaction_rank(fmm)
     childlist = children(t)
     empty!(t.Tofo)
     append!(t.Tofo, LowerTriangular(zeros(ComplexF64,P,P)) for _ in childlist)
@@ -40,8 +39,8 @@ function compute_Tofo_ops(::FMMLaplace2D,t::TreeNode{2})
     end
 end
 
-function compute_Tifo_ops(::FMMLaplace2D,t::TreeNode{2})
-    P = interaction_rank(t)
+function compute_Tifo_ops!(fmm::FMMLaplace2D,τ::TreeNode{2})
+    P = interaction_rank(fmm)
     ilist = interaction_list(τ)
     cτ = center(τ) |> from_point2d_to_complex
     empty!(τ.Tifo)
@@ -67,9 +66,9 @@ function compute_Tifo_ops(::FMMLaplace2D,t::TreeNode{2})
     end
 end
 
-function compute_Tifi_ops(::FMMLaplace2D,t::TreeNode{2})
+function compute_Tifi_ops!(fmm::FMMLaplace2D,σ::TreeNode{2})
     isroot(σ) && return
-    P = interaction_rank(t)
+    P = interaction_rank(fmm)
     τ = parent(σ)
     cσ = center(σ) |> from_point2d_to_complex
     cτ = center(τ) |> from_point2d_to_complex
@@ -84,10 +83,10 @@ function compute_Tifi_ops(::FMMLaplace2D,t::TreeNode{2})
     end
 end
 
-function compute_Tofs_ops(::FMMLaplace2D,t::TreeNode{2})
-    P = interaction_rank(t)
+function compute_Tofs_ops!(fmm::FMMLaplace2D,σ::TreeNode{2})
+    P = interaction_rank(fmm)
     cσ = center(σ) |> from_point2d_to_complex
-    xlist = points(σ)
+    xlist = points(σ) |> from_point2d_to_complex
     Nσ = npoints(σ)
     mat = σ.Tofs
     for j in 1:Nσ
@@ -101,16 +100,16 @@ function compute_Tofs_ops(::FMMLaplace2D,t::TreeNode{2})
     end
 end
 
-function compute_Ttfi_ops(::FMMLaplace2D,t::TreeNode{2})
-    P = interaction_rank(t)
+function compute_Ttfi_ops!(fmm::FMMLaplace2D,τ::TreeNode{2})
+    P = interaction_rank(fmm)
     cτ = center(τ) |> from_point2d_to_complex
-    xlist = points(τ) 
+    xlist = points(τ) |> from_point2d_to_complex
     Nτ = npoints(τ)
     mat = τ.Ttfi
     for j in 1:P
         p = j-1
         for i in 1:Nτ
-            xi = xlist[i]
+            xi = xlist[i] 
             d = xi-cτ
             mat[i,j] = d^p
         end

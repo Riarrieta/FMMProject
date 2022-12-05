@@ -12,8 +12,8 @@ Random.seed!(1)
 
 @testset "FMM Laplace 2D" begin
     npoints = 53
-    L = 3  # max level
-    P = 3  # interaction rank
+    L = 5  # max level
+    P = 5  # interaction rank
     points = rand(Point2D,npoints)
     copy_points = deepcopy(points)
 
