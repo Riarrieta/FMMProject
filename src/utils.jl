@@ -13,7 +13,7 @@ dimension(::Type{AbstractKernel{N}}) where N = N
 abstract type Laplace{N} <: AbstractKernel{N} end
 
 abstract type Laplace2D <: Laplace{2} end
-(::Type{Laplace2D})(x,y) = (x!=y)*log(norm(x-y))
+(::Type{Laplace2D})(x::Point2D,y::Point2D) = (x!=y)*log(norm(x-y))
 
 abstract type Laplace3D <: Laplace{3} end
 (::Type{Laplace3D})(x,y) = 1/(4π*norm(x-y))

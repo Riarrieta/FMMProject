@@ -39,6 +39,27 @@ function compute_Tofo_ops!(fmm::FMMLaplace2D,t::TreeNode{2})
     end
 end
 
+function compute_Tifo_ops!(Tifo::Matrix{ComplexF64},
+                           cσ::ComplexF64,
+                           cτ::ComplexF64,
+                           P::Int64)
+    d = cσ - cτ
+    for j in 1:P
+        p = j-1
+        for i in 1:P
+            r = i-1
+            if p==0 && r==0
+                Tifo[i,j] = log(-d)
+            elseif r==0
+                Tifo[i,j] = minus1exp(p)/d^p
+            elseif p==0
+                Tifo[i,j] = -1/(r*d^r)
+            else
+                Tifo[i,j] = minus1exp(p)*binomial(r+p-1,p-1)/d^(r+p)
+            end
+        end
+    end
+end
 function compute_Tifo_ops!(fmm::FMMLaplace2D,τ::TreeNode{2})
     P = interaction_rank(fmm)
     ilist = interaction_list(τ)
@@ -47,71 +68,71 @@ function compute_Tifo_ops!(fmm::FMMLaplace2D,τ::TreeNode{2})
     append!(τ.Tifo, zeros(ComplexF64,P,P) for _ in ilist)
     for (σ,mat) in zip(ilist,τ.Tifo)
         cσ = center(σ) |> from_point2d_to_complex
-        d = cσ - cτ
-        for j in 1:P
-            p = j-1
-            for i in 1:P
-                r = i-1
-                if p==0 && r==0
-                    mat[i,j] = log(-d)
-                elseif r==0
-                    mat[i,j] = minus1exp(p)/d^p
-                elseif p==0
-                    mat[i,j] = -1/(r*d^r)
-                else
-                    mat[i,j] = minus1exp(p)*binomial(r+p-1,p-1)/d^(r+p)
-                end
-            end
-        end
+        compute_Tifo_ops!(mat,cσ,cτ,P)
     end
 end
 
+function compute_Tifi_ops!(Tifi::UpperTriangular,
+                           cσ::ComplexF64,
+                           cτ::ComplexF64,
+                           P::Int64)
+    d = cσ - cτ
+    for j in 1:P
+        p = j-1
+        for i in 1:j
+            r = i-1
+            Tifi[i,j] = binomial(p,r)*d^(p-r)
+        end
+    end
+end
 function compute_Tifi_ops!(fmm::FMMLaplace2D,σ::TreeNode{2})
     isroot(σ) && return
     P = interaction_rank(fmm)
     τ = parent(σ)
     cσ = center(σ) |> from_point2d_to_complex
     cτ = center(τ) |> from_point2d_to_complex
-    d = cσ - cτ
-    mat = σ.Tifi
-    for j in 1:P
-        p = j-1
-        for i in 1:j
-            r = i-1
-            mat[i,j] = binomial(p,r)*d^(p-r)
+    compute_Tifi_ops!(σ.Tifi,cσ,cτ,P)
+end
+
+function compute_Tofs_ops!(Tofs::Matrix{ComplexF64},
+                           xlist::AbstractVector{ComplexF64},
+                           cσ::ComplexF64,
+                           P::Int64)
+    Nσ = length(xlist)
+    for j in 1:Nσ
+        xj = xlist[j]
+        d = xj-cσ
+        Tofs[1,j] = one(ComplexF64)
+        for i in 2:P
+            p = i-1
+            Tofs[i,j] = -1/p*d^p
         end
     end
 end
-
 function compute_Tofs_ops!(fmm::FMMLaplace2D,σ::TreeNode{2})
     P = interaction_rank(fmm)
     cσ = center(σ) |> from_point2d_to_complex
     xlist = points(σ) |> from_point2d_to_complex
-    Nσ = npoints(σ)
-    mat = σ.Tofs
-    for j in 1:Nσ
-        xj = xlist[j]
-        d = xj-cσ
-        mat[1,j] = one(ComplexF64)
-        for i in 2:P
-            p = i-1
-            mat[i,j] = -1/p*d^p
-        end
-    end
+    compute_Tofs_ops!(σ.Tofs,xlist,cσ,P)
 end
 
-function compute_Ttfi_ops!(fmm::FMMLaplace2D,τ::TreeNode{2})
-    P = interaction_rank(fmm)
-    cτ = center(τ) |> from_point2d_to_complex
-    xlist = points(τ) |> from_point2d_to_complex
-    Nτ = npoints(τ)
-    mat = τ.Ttfi
+function compute_Ttfi_ops!(Ttfi::Matrix{ComplexF64},
+                           xlist::AbstractVector{ComplexF64},
+                           cτ::ComplexF64,
+                           P::Int64)
+    Nτ = length(xlist)
     for j in 1:P
         p = j-1
         for i in 1:Nτ
             xi = xlist[i] 
             d = xi-cτ
-            mat[i,j] = d^p
+            Ttfi[i,j] = d^p
         end
     end
+end
+function compute_Ttfi_ops!(fmm::FMMLaplace2D,τ::TreeNode{2})
+    P = interaction_rank(fmm)
+    cτ = center(τ) |> from_point2d_to_complex
+    xlist = points(τ) |> from_point2d_to_complex
+    compute_Ttfi_ops!(τ.Ttfi,xlist,cτ,P)
 end
