@@ -31,6 +31,9 @@ points_indices(t::TreeNode) = t.points_indices
 box(t::TreeNode) = t.box
 npoints(t::TreeNode) = length(points(t))
 
+# returns local_index,global_index,point
+eachpoint(t::TreeNode) = ((l,points_indices(t)[l],points(t)[l]) for l in 1:npoints(t))  
+
 corners(t::TreeNode) = corners(t.box)
 center(t::TreeNode) = center(t.box)
 halfside(t::TreeNode) = halfside(t.box)

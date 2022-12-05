@@ -1,5 +1,15 @@
 
+const Point{N} = SVector{N,Float64}
+const Point2D  = Point{2}
+const Point3D  = Point{3}
+
+from_point2d_to_complex(p::Point2D) = ComplexF64(p...)
+from_point2d_to_complex(l::Vector{Point2D}) = reinterpret(ComplexF64,l)
+
 abstract type AbstractKernel{N} end
+(K::Type{<:AbstractKernel})(v::AbstractVector{<:Point}) = [K(x,y) for x in v, y in v]
+dimension(::Type{AbstractKernel{N}}) where N = N
+
 abstract type Laplace{N} <: AbstractKernel{N} end
 
 abstract type Laplace2D <: Laplace{2} end
@@ -7,15 +17,6 @@ abstract type Laplace2D <: Laplace{2} end
 
 abstract type Laplace3D <: Laplace{3} end
 (::Type{Laplace3D})(x,y) = 1/(4π*norm(x-y))
-
-dimension(::Type{AbstractKernel{N}}) where N = N
-
-const Point{N} = SVector{N,Float64}
-const Point2D  = Point{2}
-const Point3D  = Point{3}
-
-from_point2d_to_complex(p::Point2D) = ComplexF64(p...)
-from_point2d_to_complex(l::Vector{Point2D}) = reinterpret(ComplexF64,l)
 
 minus1exp(p) = (-1)^isodd(p)
 

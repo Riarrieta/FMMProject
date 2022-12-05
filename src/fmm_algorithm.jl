@@ -3,8 +3,7 @@ function Base.:*(fmm::FMM,qvec::AbstractVector)
     @assert length(qvec) == npoints(fmm) == length(result(fmm))
     upward_pass!(fmm,qvec)
     downward_pass!(fmm)
-
-
+    compute_potential!(fmm,qvec)
     return result(fmm)
 end
 
@@ -24,7 +23,7 @@ function compute_outgoing_expansion!(τ::TreeNode,qbuffer,qvec)
     end
 end
 function upward_pass!(fmm::FMM,qvec::AbstractVector)
-    qbuffer = # use 'result' as buffer for charges
+    qbuffer = result(fmm)# use 'result' as buffer for charges
     for (_,level) in Iterators.reverse(eachlevel(fmm))
         for tree in level
             compute_outgoing_expansion!(tree,qbuffer,qvec)
@@ -56,25 +55,21 @@ function compute_potential!(fmm::FMM,leaf::TreeNode,qvec)
     # Fix: function barriers
     leaf_result = leaf.Ttfi*leaf.vhat   # FIX: do not allocate
     K = kernel(fmm)
-    xpoints = points(leaf)
-    xindices = points_indices(leaf)
     r = result(fmm)
     # compute interactions 
-    for (x,ix) in zip(xpoints,xindices)
+    for (ilocal_x,iglobal_x,x) in eachpoint(leaf)
         # target-from-incoming
-        r[ix] += leaf_result[ix]  
+        r[iglobal_x] += leaf_result[ilocal_x]  
         # self-interactions
-        for (y,iy) in zip(xpoints,xindices)
-            qy = qvec[iy]  # charge
-            r[ix] += K(x,y)*qy
+        for (ilocal_y,iglobal_y,y) in eachpoint(leaf)
+            qy = qvec[iglobal_y]  # charge
+            r[iglobal_x] += K(x,y)*qy
         end
         # neighbor-interactions
         for neigh in neighbor_list(leaf)
-            ypoints = points(neigh)
-            yindices = points_indices(neigh)
-            for (y,iy) in zip(ypoints,yindices)
-                qy = qvec[iy]  # charge
-                r[ix] += K(x,y)*qy
+            for (ilocal_y,iglobal_y,y) in eachpoint(neigh)
+                qy = qvec[iglobal_y]  # charge
+                r[iglobal_y] += K(x,y)*qy
             end
         end
     end

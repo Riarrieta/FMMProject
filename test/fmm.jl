@@ -1,5 +1,6 @@
 using Test
 using Random
+using LinearAlgebra
 using FMMProject
 import FMMProject: nlevels,
                    eachlevel,
@@ -7,7 +8,8 @@ import FMMProject: nlevels,
                    children,
                    parent,
                    neighbor_list,
-                   interaction_list
+                   interaction_list,
+                   Laplace2D
 Random.seed!(1)
 
 @testset "FMM Laplace 2D" begin
@@ -55,5 +57,17 @@ Random.seed!(1)
         end
     end
     @test points_tree == npoints
+    
+    # Forward map
+    K = Laplace2D
+    charges = ones(npoints)
+    copy_charges = deepcopy(charges)
+    pot = K(points)*charges
+    pot_approx = fmm*charges
+
+    @test pot_approx == fmm*charges
     @test points == copy_points
+    @test copy_charges == charges
+
+    @test norm(pot_approx-pot,Inf)/norm(pot,Inf) < 1  # change error
 end
