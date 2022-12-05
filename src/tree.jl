@@ -2,7 +2,7 @@
 struct TreeNode{N}
     parent::Union{Nothing,TreeNode{N}}
     children::Vector{TreeNode{N}}   # list of children
-    nlist::Vector{TreeNode{N}}      # neighbor list
+    nlist::Vector{TreeNode{N}}      # neighbor list (leaves only)
     ilist::Vector{TreeNode{N}}      # interaction list
     box::Box{N}
     qhat::Vector{ComplexF64}        # outcoming expansion
