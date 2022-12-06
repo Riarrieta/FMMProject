@@ -22,7 +22,7 @@ pot = ϕmat*qcharges  # exact potential
 ## setup
 cx = Point2D(0.5,0.5) |> from_point2d_to_complex # center targets
 cσ = Point2D(0.5+ζ,0.5) |> from_point2d_to_complex # center sources
-P = 3
+P = 5
 
 ## Tofs op, working!
 Nσ = N
@@ -32,10 +32,10 @@ qhat = Tofs*qcharges
 
 pot_approx1 = [log(x-cσ)*qhat[1] + sum(1/(x-cσ)^(p-1)*qhat[p] for p in 2:P) for x in from_point2d_to_complex(xpoints)]
 err1_real = norm(real.(pot_approx1)-pot,Inf)/norm(pot,Inf)
-@info "" err1_real
+@info "Tofs" err1_real
 
 ## Tifo op and Ttfi op, working!
-cτ = cx #+ (0.1-0.0im) # center of expansion
+cτ = cx  # center of expansion
 
 Tifo = zeros(ComplexF64,P,P)
 compute_Tifo_ops!(Tifo,cσ,cτ,P)
@@ -48,7 +48,7 @@ compute_Ttfi_ops!(Ttfi,xlist,cτ,P)
 
 pot_approx2 = Ttfi*vhat
 err2_real = norm(real.(pot_approx2)-pot,Inf)/norm(pot,Inf)
-@info "" err2_real
+@info "Tifo + Ttfi" err2_real
 
 ## Tofo op, new center, working!
 new_cσ = cσ + (0.1 - 0.1im)
@@ -59,12 +59,34 @@ qhat_new_cσ = new_Tofs*qcharges
 
 pot_approx3 = [log(x-new_cσ)*qhat_new_cσ[1] + sum(1/(x-new_cσ)^(p-1)*qhat_new_cσ[p] for p in 2:P) for x in from_point2d_to_complex(xpoints)]
 err3_real = norm(real.(pot_approx3)-pot,Inf)/norm(pot,Inf)
-@info "" err3_real
+#@info "" err3_real
 
 Tofo = LowerTriangular(zeros(ComplexF64,P,P))
 compute_Tofo_ops!(Tofo,cσ,new_cσ,P)
 approx_qhat_new_cσ = Tofo*qhat
 
 err4 = norm(approx_qhat_new_cσ-qhat_new_cσ,Inf)/norm(qhat_new_cσ,Inf)
-@info "" err4
+@info "Tofo" err4   # must be exact
+
+## Tifi op, new center
+new_cτ = cx + (0.1-0.1im) # center of expansion
+
+new_Tifo = zeros(ComplexF64,P,P)
+compute_Tifo_ops!(new_Tifo,cσ,new_cτ,P)
+new_vhat = new_Tifo*qhat  # with respect to new_cτ
+
+new_Ttfi = zeros(ComplexF64,Nτ,P)
+compute_Ttfi_ops!(new_Ttfi,xlist,new_cτ,P)   # with respect to new_cτ
+
+pot_approx5 = new_Ttfi*new_vhat
+err5_real = norm(real.(pot_approx5)-pot,Inf)/norm(pot,Inf)
+#@info "" err5_real
+
+Tifi = UpperTriangular(zeros(ComplexF64,P,P))
+compute_Tifi_ops!(Tifi,cτ,new_cτ,P)
+approx_vhat = Tifi*new_vhat;   # with respect to cτ
+
+err6 = norm(Ttfi*approx_vhat-new_Ttfi*new_vhat,Inf)/norm(new_Ttfi*new_vhat,Inf)
+@info "Tifi" err6  # must be exact
+
 
