@@ -20,6 +20,25 @@ function initialize_tree_structures(::Type{Laplace2D}, npoints, P; isleaf)
     return children,nlist,ilist,qhat,vhat,Tofo,Tifo,Tifi,Tofs,Ttfi
 end
 
+function compute_Tofo_ops!(Tofo::LowerTriangular,
+                           cσ::ComplexF64,
+                           cτ::ComplexF64,
+                           P::Int64)
+    d = cσ - cτ
+    for j in 1:P
+        s = j-1
+        for i in j:P
+            r = i-1
+            if r==0 && s==0
+                Tofo[i,j] = one(ComplexF64)
+            elseif s==0
+                Tofo[i,j] = (-1/r)*(cσ-cτ)^r
+            else
+                Tofo[i,j] = (s/r)*binomial(r,s)*d^(r-s)
+            end
+        end
+    end
+end
 function compute_Tofo_ops!(fmm::FMMLaplace2D,t::TreeNode{2})
     P = interaction_rank(fmm)
     childlist = children(t)
@@ -28,14 +47,7 @@ function compute_Tofo_ops!(fmm::FMMLaplace2D,t::TreeNode{2})
     cτ = center(t) |> from_point2d_to_complex
     for (child,mat) in zip(childlist,t.Tofo)
         cσ = center(child) |> from_point2d_to_complex
-        d = cσ - cτ
-        for j in 1:P
-            s = j-1
-            for i in j:P
-                r = i-1
-                mat[i,j] = binomial(r,s)*d^(r-s)
-            end
-        end
+        compute_Tofo_ops!(mat,cσ,cτ,P)
     end
 end
 
