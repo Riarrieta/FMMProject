@@ -8,6 +8,8 @@ function convert_to_singlelevel!(fmm::FMMLaplace2D)
         append!(interaction_list(leaf),setdiff(leaves(fmm),(neighbor_list(leaf)...,leaf)))
         @assert length(leaves(fmm))-9 ≤ length(interaction_list(leaf)) ≤ length(leaves(fmm))-4
         @assert Nleaves == 1 + length(interaction_list(leaf)) + length(neighbor_list(leaf))
+        # assemble incoming-from-outgoing operators
+        compute_Tifo_ops!(fmm,leaf)
     end
 end
 
@@ -21,6 +23,7 @@ function singlelevel_forwardmap!(fmm::FMM,qvec::AbstractVector)
     # construct incoming expansion
     for leaf in leaves(fmm)
         fill!(leaf.vhat,0)
+        @assert length(leaf.Tifo) == length(interaction_list(leaf))
         for (i,Tifo) in zip(interaction_list(leaf),leaf.Tifo)
             mul!(leaf.vhat,Tifo,i.qhat,true,true)    # τ.vhat = Tifo*i.qhat + τ.vhat
         end
@@ -38,12 +41,14 @@ function compute_potential_without_incoming!(fmm::FMM,leaf::TreeNode,qvec,qbuffe
     K = kernel(fmm)
     r = result(fmm)
     P = interaction_rank(fmm)
+    leaf_result_incoming = zeros(ComplexF64,Nτ)
     # compute interactions 
     for (ilocal_x,iglobal_x,x) in eachpoint(leaf)
         # far field
         leaf_result = zero(ComplexF64)
         d = zero(ComplexF64)
-        for far in interaction_list(leaf)
+        @assert length(leaf.Tifo) == length(interaction_list(leaf))
+        for (far,Tifo) in zip(interaction_list(leaf),leaf.Tifo)
             qhat = far.qhat
             cσ = center(far)
             d = x-cσ |> from_point2d_to_complex

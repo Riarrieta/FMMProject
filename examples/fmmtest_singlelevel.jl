@@ -21,7 +21,7 @@ K = Laplace2D
 pot = [sum(K(points[i],y)*qy for (y,qy) in zip(points,qcharges)) for i in idxs]
 
 ## fmm
-L = 4 # max level   Lapprox = log(npoints/10^2)/log(4)+1
+L = 5 # max level   Lapprox = log(npoints/10^2)/log(4)+1
 P = 5 # interaction rank  max=34
 fmm = FMMLaplace2D(points,P,L);
 convert_to_singlelevel!(fmm);
