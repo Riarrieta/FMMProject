@@ -68,7 +68,7 @@ approx_qhat_new_cσ = Tofo*qhat
 err4 = norm(approx_qhat_new_cσ-qhat_new_cσ,Inf)/norm(qhat_new_cσ,Inf)
 @info "Tofo" err4   # must be exact
 
-## Tifi op, new center
+## Tifi op, new center, working
 new_cτ = cx + (0.1-0.1im) # center of expansion
 
 new_Tifo = zeros(ComplexF64,P,P)
