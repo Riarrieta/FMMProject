@@ -12,8 +12,8 @@ struct TreeNode{N}
     Tifo::Vector{Matrix{ComplexF64}}  # incoming-from-outgoing
     Tifi::UpperTriangular{ComplexF64,Matrix{ComplexF64}}  # incoming-from-incoming
     # Leaves-only translation operators
-    Tofs::Matrix{ComplexF64}
-    Ttfi::Matrix{ComplexF64}
+    Tofs::Matrix{ComplexF64}     # outgoing-from-source
+    Ttfi::Matrix{ComplexF64}     # target-from-incoming
     # Leaves-only data
     points::Vector{Point{N}}           # points xᵢ in R^N
     points_indices::Vector{Int64}    # global indices of points xᵢ 

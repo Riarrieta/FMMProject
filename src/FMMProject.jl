@@ -14,5 +14,6 @@ include("fmm.jl")
 include("fmm_operators.jl")
 include("fmm_assembly.jl")
 include("fmm_algorithm.jl")
+include("fmm_singlelevel.jl")
 
 end # module
