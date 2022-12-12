@@ -1,14 +1,14 @@
 
 function Base.:*(fmm::FMM,qvec::AbstractVector)
     @assert length(qvec) == npoints(fmm) == length(result(fmm))
-    upward_pass!(fmm,qvec)
+    qbuffer = deepcopy(result(fmm))
+    upward_pass!(fmm,qvec,qbuffer)
     downward_pass!(fmm)
-    compute_potential!(fmm,qvec)
+    compute_potential!(fmm,qvec,qbuffer)
     return result(fmm)
 end
 
 function compute_outgoing_expansion!(τ::TreeNode,qbuffer,qvec)
-    fill!(τ.qhat,0)
     Nτ = npoints(τ)
     iszero(Nτ) && return
     qτ = @view qbuffer[1:Nτ]   # buffer
@@ -16,14 +16,14 @@ function compute_outgoing_expansion!(τ::TreeNode,qbuffer,qvec)
     if isleaf(τ)
         mul!(τ.qhat,τ.Tofs,qτ)  #  τ.qhat = τ.Tofs*qτ
     else
+        fill!(τ.qhat,0)
         for (child,Tofo) in zip(children(τ),τ.Tofo)
             qhat_child = child.qhat
             mul!(τ.qhat,Tofo,qhat_child,true,true)  # τ.qhat = Tofo*qhat_child + τ.qhat
         end
     end
 end
-function upward_pass!(fmm::FMM,qvec::AbstractVector)
-    qbuffer = result(fmm)# use 'result' as buffer for charges
+function upward_pass!(fmm::FMM,qvec::AbstractVector,qbuffer)
     for (_,level) in Iterators.reverse(eachlevel(fmm))
         for tree in level
             compute_outgoing_expansion!(tree,qbuffer,qvec)
@@ -51,9 +51,12 @@ function downward_pass!(fmm::FMM)
     end
 end
 
-function compute_potential!(fmm::FMM,leaf::TreeNode,qvec)
+function compute_potential!(fmm::FMM,leaf::TreeNode,qvec,qbuffer)
     # Fix: function barriers
-    leaf_result = leaf.Ttfi*leaf.vhat   # FIX: do not allocate
+    Nτ = npoints(leaf)
+    iszero(Nτ) && return
+    leaf_result = @view qbuffer[1:Nτ]   # buffer
+    mul!(leaf_result,leaf.Ttfi,leaf.vhat)  # leaf_result = leaf.Ttfi*leaf.vhat
     K = kernel(fmm)
     r = result(fmm)
     # compute interactions 
@@ -69,14 +72,14 @@ function compute_potential!(fmm::FMM,leaf::TreeNode,qvec)
         for neigh in neighbor_list(leaf)
             for (ilocal_y,iglobal_y,y) in eachpoint(neigh)
                 qy = qvec[iglobal_y]  # charge
-                r[iglobal_y] += K(x,y)*qy
+                r[iglobal_x] += K(x,y)*qy
             end
         end
     end
 end
-function compute_potential!(fmm::FMM,qvec)
+function compute_potential!(fmm::FMM,qvec,qbuffer)
     fill!(result(fmm),0)  # reset result
     for leaf in leaves(fmm)
-        compute_potential!(fmm,leaf,qvec)
+        compute_potential!(fmm,leaf,qvec,qbuffer)
     end
 end

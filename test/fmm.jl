@@ -20,7 +20,7 @@ Random.seed!(1)
     copy_points = deepcopy(points)
 
     fmm = FMMLaplace2D(points,P,L);
-    @test L == nlevels(fmm)
+    @test L == nlevels(fmm) == maxlevel(fmm)
     points_tree = 0
     for (l,level) in eachlevel(fmm)
         @test length(level) == 4^(l-1)
@@ -49,6 +49,8 @@ Random.seed!(1)
                 @test length(tree.points) == length(tree.points_indices)
                 @test size(tree.Tofs) == (P,length(tree.points))
                 @test size(tree.Ttfi) == (length(tree.points),P)
+                @test tree ∉ neighbor_list(tree)
+                @test tree ∉ interaction_list(tree)
                 for (i,p) in zip(tree.points_indices,tree.points)
                     @test fmm.points[i] == p
                 end
