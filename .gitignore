@@ -1,2 +1,11 @@
 .vscode/**
 Manifest.toml
+*.aux
+*.bbl
+*.blg
+*.listing
+*.log
+*.out
+*.gz
+*.thm
+
