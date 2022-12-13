@@ -9,11 +9,11 @@ function Base.:*(fmm::FMM,qvec::AbstractVector)
 end
 
 function compute_outgoing_expansion!(τ::TreeNode,qbuffer,qvec)
-    Nτ = npoints(τ)
-    iszero(Nτ) && return
-    qτ = @view qbuffer[1:Nτ]   # buffer
-    qτ .= qvec[points_indices(τ)]  # copy charges in buffer
     if isleaf(τ)
+        Nτ = npoints(τ)
+        iszero(Nτ) && return
+        qτ = @view qbuffer[1:Nτ]   # buffer
+        qτ .= qvec[points_indices(τ)]  # copy charges in buffer
         mul!(τ.qhat,τ.Tofs,qτ)  #  τ.qhat = τ.Tofs*qτ
     else
         fill!(τ.qhat,0)

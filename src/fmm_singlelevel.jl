@@ -24,7 +24,7 @@ function singlelevel_forwardmap!(fmm::FMM,qvec::AbstractVector)
     for leaf in leaves(fmm)
         fill!(leaf.vhat,0)
         @assert length(leaf.Tifo) == length(interaction_list(leaf))
-        for (i,Tifo) in zip(interaction_list(leaf),leaf.Tifo)
+        for (i,Tifo) in zip(interaction_list(leaf),leaf.Tifo) # from far-field
             mul!(leaf.vhat,Tifo,i.qhat,true,true)    # τ.vhat = Tifo*i.qhat + τ.vhat
         end
     end
