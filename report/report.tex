@@ -243,15 +243,14 @@
 %% ABSTRACT
 %% ------------------------------------------------------------------
 \begin{abstract}
+	In this work we describe the Fast Multipole Method (FMM),  invented by L. Greengard and V. Rokhlin in 1987 \cite{greengard1987fast} to compute the potential interaction of $N$ particles in $\Ocal(N)$ time, in contrast with the $\Ocal(N^2)$ time that a direct approach would take. We consider a very particular case, where the potential is given by the electrostatic potential in two dimension and the distribution of points is taken as random uniformly distributed. This work follows closely the description of the FMM given by Martinsson \cite{martinsson2019fast}.
+	
+	The FMM was coded from scratch in a Julia package \cite{fmmproject} and its performances was compared against the theoretical predictions. Our code manages to achieve the theoretical error scaling with respect to the number of particles $N$ and the interaction rank $P$. It also achieves the theoretical time scaling with respect to $N$, but performs better-than-expected when the time is considered with respect to $P$. Our hypothesis for this phenomenon is that the values of $P$ considered are so low that compiler or low-level routines optimizations does not allow us to see the correct scaling.
 \end{abstract}
 
 %% ------------------------------------------------------------------
 %% END HEADER
 %% ------------------------------------------------------------------
-
-\section{Introduction}
-\label{sec:intro}
-%source \cite{martinsson2019fast}
 
 \section{The multipole expansion for well separated clusters of points}\label{sec:multipole}
 
@@ -430,7 +429,7 @@ The FMM algorithm is detailed in \cref{fig:upfmm}, \cref{fig:downfmm} and \cref{
 	\label{fig:potfmm}
 \end{figure}
 
-\section{Error estimation}
+\section{Error estimation}\label{sec:err}
 The error for FMM type of methods is usually estimated using a single translation operation, which includes the processes that maps charges into \textit{outgoing expansions}, into \textit{incoming expansions} and finally into potentials. As shown in \cref{sec:multipole}, this error $\epsilon$ decays exponentially fast with respect to the interaction rank $P$, i.e., $P=\Ocal(\log(1/\epsilon))$. A more careful analysis and a sharper bound is given in \cite{petersen1995error}. 
 
 \section{Cost estimation}
@@ -444,49 +443,51 @@ Let $N$ be the total number of charges, $L$ the number of levels ($L+1$ levels i
 \end{itemize}
 Adding up all costs, we end up with a total cost of $\Tbf^\text{FMM}\sim P^2N/b + PN + Nb$. Since we are free to choose $b$ by tuning the numbers of levels $L$, we can choose $b\sim P$ so that the cost is minimized, 
 \begin{align}
-	\Tbf^\text{FMM}\sim PN \sim N\log(1/\epsilon),
+	\Tbf^\text{FMM}\sim PN \sim N\log(1/\epsilon), \label{eq:scaling}
 \end{align}
 where we used the fact $P \sim \log(1/\epsilon)$, with $\epsilon$ being the error.
 
 \section{Numerical results}
-The FMM algorithm described in \cref{sec:fmm} was coded from scratch
+The FMM algorithm described in \cref{sec:fmm} was coded in a Julia package \cite{fmmproject} from scratch.
+
+In our first numerical experiment we considered $N$ uniformly distributed particles in $[0,1]^2$ with associated normally distributed charges $\bol q$ (the charges were normalized, so that $\norm{\bol q}_1 = 1$). We computed the whole potential using the FMM and compared against the exact potential \cref{eq:pot_unif} for 256 randomly chosen particles. The number of particles was taken between $N=2^{12}$ and $N=2^{22}$, the interaction rank was fixed at $P=5$ and the number of levels $L$ was chosen so that the average number of particles per leaf box was $b=128$. In \cref{fig:nscaling} we show the time taken by both the FMM and the direct evaluation method to compute the full potential. For the direct evaluation method we estimated the total time using the time taken in computing the potential for the 256 particles. It is observed that the direct method scales as the expected $\Ocal(N^2)$, whereas our FMM implementation achieves the $\Ocal(N)$ scaling predicted in \cref{eq:scaling}. For $N=2^{22}$, while the direct method would take more than 100 days in computing the full potential, our FMM implementation only takes a bit more than 100 seconds. In \cref{fig:errscaling} we show the relative error (measured with respect to $\norm{\cdot}_\infty$) committed by the FMM at the 256 randomly chosen particles. It is observed that the error remains stable and below $0.1\%$ for all values of $N$.
+
+Our second numerical experiment consider a similar setting as before, but with $N=2^{18}$, the interaction rank varying from $P=2$ to $P=20$, and $b = 64P$. The relative error committed by the FMM as a function of $P$ is shown in \cref{fig:perror}. It is observed that the error decays exponentially with respect to $P$, as pointed out in \cref{sec:err}. The time to compute the full potential as a function of $P$ is shown in \cref{fig:ptime}. It is observed that the time remains constant for most values of $P$, but then goes up for $P=18$ and $P=20$. This behavior does not agree with \cref{eq:scaling}, which assures that the time scaling should be $\Ocal(P)$ for $N$ fixed. Our hypotheses for this phenomenon is that, although we are increasing $P$, the cost of applying all the translation operators is not increasing, because the operators' size is very small ($20\times 20$ at most) and it is possible that the low-level linear algebra routine that performs the matrix-vector products do some optimization which reduces the true cost $P^2$ cost of applying the operators. A comparison between the relative error and the time to compute the full potential is shown in \cref{fig:ptimeerror}.
 
 
-
+\clearpage
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.8\textwidth]{nscaling}
-	\caption{}
-	\label{fig:}
+	\caption{A comparison of the time to compute the full potential between the FMM and the direct method, first numerical experiment.}
+	\label{fig:nscaling}
 \end{figure}
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.8\textwidth]{errscaling}
-\caption{}
-\label{fig:}
+\caption{Relative error committed by the FMM as a function of $N$, first numerical experiment.}
+\label{fig:errscaling}
 \end{figure}
+\clearpage
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.8\textwidth]{perror}
-\caption{}
-\label{fig:}
+\caption{Relative error committed by the FMM as a function of $P$, second numerical experiment.}
+\label{fig:perror}
 \end{figure}
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.8\textwidth]{ptime}
-\caption{}
-\label{fig:}
+\caption{Time to compute the full potential as a function of $P$, second numerical experiment.}
+\label{fig:ptime}
 \end{figure}
+\clearpage
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.8\textwidth]{ptimeerror}
-\caption{}
-\label{fig:}
+\caption{Comparison between relative error and time to compute the full potential, second numerical experiment.}
+\label{fig:ptimeerror}
 \end{figure}
-
-
-
-
 
 \bibliographystyle{siamplain}
 \bibliography{references}
